@@ -21,7 +21,8 @@ RSpec.describe UrlsController, type: :controller do
     end
 
     it 'throws 404 when the URL is not found' do
-      skip 'add test'
+      get :show, params: {url: 'invalid'}
+      expect(response).to have_http_status(:not_found)
     end
   end
 

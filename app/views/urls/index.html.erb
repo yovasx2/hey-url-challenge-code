@@ -38,7 +38,7 @@
     <% @urls.each do |url| %>
       <tr>
         <th scope="row"><a href="<%= visit_url(url.short_url) %>"><%= visit_url(url.short_url) %></a></th>
-        <td><a href="https://drive.google.com/file/d/1VdLgSSMojWFb1GRoBAFX_eXy7oX2J">drive.google.com/file/d/1VdLgSSMojWFb1GRoBAFX_eXy7oX2J...</a></td>
+        <td><%= url.original_url %></td>
         <td><%= url.created_at.strftime('%b %d, %Y') %></td>
         <td><%= url.clicks_count %></td>
         <td>

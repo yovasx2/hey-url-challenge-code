@@ -8,7 +8,7 @@
       </li>
       <li class="collection-item">Created <%= @url.created_at.strftime('%b %d, %Y') %></li>
       <li class="collection-item">
-        Original URL: <%= link_to @url.original_url %>
+        Original URL: <%= link_to @url.original_url, visit_url(@url.short_url) %>
       </li>
     </ul>
   </div>

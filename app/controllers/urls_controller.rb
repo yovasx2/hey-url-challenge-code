@@ -3,48 +3,41 @@
 class UrlsController < ApplicationController
   def index
     @url = Url.new
-    @urls = [
-      Url.new(short_url: '123', original_url: 'http://google.com', created_at: Time.now),
-      Url.new(short_url: '456', original_url: 'http://facebook.com', created_at: Time.now),
-      Url.new(short_url: '789', original_url: 'http://yahoo.com', created_at: Time.now)
-    ]
+    @urls = Url.all
   end
 
   def create
-    # create a new URL record
+    @url = Url.new(url_params)
+    @url.shorten
+    if @url.save
+      redirect_to action: :show, url: @url.short_url
+    else
+      flash.notice = @url.errors.full_messages.join(', ')
+      redirect_to root_path
+    end
   end
 
   def show
-    @url = Url.new(short_url: '123', original_url: 'http://google.com', created_at: Time.now)
+    @url = Url.find_by(short_url: params[:url])
+    return render file: 'public/404.html', layout: false, status: :not_found unless @url
     # implement queries
-    @daily_clicks = [
-      ['1', 13],
-      ['2', 2],
-      ['3', 1],
-      ['4', 7],
-      ['5', 20],
-      ['6', 18],
-      ['7', 10],
-      ['8', 20],
-      ['9', 15],
-      ['10', 5]
-    ]
-    @browsers_clicks = [
-      ['IE', 13],
-      ['Firefox', 22],
-      ['Chrome', 17],
-      ['Safari', 7]
-    ]
-    @platform_clicks = [
-      ['Windows', 13],
-      ['macOS', 22],
-      ['Ubuntu', 17],
-      ['Other', 7]
-    ]
+    @daily_clicks =  @url.clicks.where('created_at > ?', Time.now.beginning_of_month).group('CAST( EXTRACT(day FROM created_at) AS VARCHAR)').count.to_a
+    @daily_clicks = @daily_clicks.empty? ? [[]] : @daily_clicks
+    @browsers_clicks = @url.clicks.group(:browser).count.to_a
+    @platform_clicks = @url.clicks.group(:platform).count.to_a
   end
 
   def visit
-    # params[:url]
-    # @url = find url
+    @url = Url.find_by(short_url: params[:url])
+    return render file: 'public/404.html', layout: false, status: :not_found unless @url
+    ActiveRecord::Base.transaction do
+      @url.update_attribute(:clicks_count, @url.clicks_count + 1)
+      Click.create(url: @url, browser: browser.name, platform: browser.platform.name)
+    end
+    redirect_to @url.original_url
+  end
+
+  def url_params
+    params.require(:url).permit(:original_url)
   end
 end
